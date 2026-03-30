@@ -1,26 +1,994 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survey</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .header { position: relative; }
-        .header img { position: absolute; top: 10px; right: 10px; }
-        .footer { text-align: center; margin-top: 20px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAREC Universities — CSA Internship Survey Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --wur-dark-blue: #005172;
+    --wur-green: #008A00;
+    --wur-light-blue: #6AADE4;
+    --wur-sand: #D0B972;
+    --wur-light-grey: #D5D2CA;
+    --wur-orange: #FF7900;
+    --wur-sec-blue: #00549F;
+    --wur-white: #FFFFFF;
+    --wur-black: #000000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Verdana, Geneva, sans-serif;
+    background: #f4f3f0;
+    color: var(--wur-dark-blue);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--wur-dark-blue);
+    color: white;
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: normal;
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+  }
+  .header-left p {
+    font-size: 12px;
+    opacity: 0.75;
+  }
+  .wur-logo-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .wur-logo-text {
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+  }
+  .wur-logo-sub {
+    font-size: 8px;
+    opacity: 0.8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* ── Tabs ── */
+  .tab-bar {
+    background: var(--wur-dark-blue);
+    padding: 0 40px;
+    display: flex;
+    gap: 2px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .tab-btn {
+    font-family: Verdana, sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    background: transparent;
+    border: none;
+    padding: 11px 18px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: white; }
+  .tab-btn.active {
+    color: white;
+    border-bottom-color: var(--wur-green);
+    font-weight: bold;
+  }
+
+  /* ── Layout ── */
+  .content { padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Metric cards ── */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .metric-card {
+    background: white;
+    border-top: 4px solid var(--wur-green);
+    padding: 16px 18px;
+    border-radius: 2px;
+  }
+  .metric-card.blue { border-top-color: var(--wur-dark-blue); }
+  .metric-card.orange { border-top-color: var(--wur-orange); }
+  .metric-card.lightblue { border-top-color: var(--wur-light-blue); }
+  .metric-label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .metric-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--wur-dark-blue);
+    line-height: 1;
+  }
+  .metric-sub { font-size: 11px; color: #888; margin-top: 4px; }
+
+  /* ── Section headings ── */
+  .section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--wur-dark-blue);
+    border-left: 4px solid var(--wur-green);
+    padding-left: 10px;
+    margin: 28px 0 14px;
+  }
+
+  /* ── Chart cards ── */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .chart-grid.single { grid-template-columns: 1fr; }
+  .chart-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .chart-card {
+    background: white;
+    border-radius: 2px;
+    padding: 20px;
+    border: 1px solid var(--wur-light-grey);
+  }
+  .chart-card h3 {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--wur-dark-blue);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  /* ── University profile cards ── */
+  .uni-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .uni-card {
+    background: white;
+    border-radius: 2px;
+    border: 1px solid var(--wur-light-grey);
+    overflow: hidden;
+  }
+  .uni-card-header {
+    background: var(--wur-dark-blue);
+    color: white;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .uni-card-country {
+    font-size: 10px;
+    font-weight: normal;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+  .uni-card-body { padding: 12px 14px; }
+  .uni-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 12px;
+  }
+  .uni-row:last-child { border-bottom: none; }
+  .uni-key { color: #666; }
+  .uni-val { font-weight: bold; color: var(--wur-dark-blue); text-align: right; max-width: 55%; line-height: 1.3; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+  .badge-yes { background: #d6edcc; color: #1a5c00; }
+  .badge-no { background: #fdd; color: #8b0000; }
+  .badge-planned { background: #fff0cc; color: #7a5000; }
+  .badge-partial { background: #ddeeff; color: #00549F; }
+  .badge-optional { background: #eee; color: #444; }
+  .badge-mandatory { background: #cce0ff; color: #005172; }
+
+  /* ── Bar chart (custom HTML) ── */
+  .bar-list { list-style: none; }
+  .bar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .bar-item-label { width: 200px; flex-shrink: 0; color: #444; text-align: right; }
+  .bar-track {
+    flex: 1;
+    background: #f0eeea;
+    border-radius: 2px;
+    height: 20px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+  .bar-count { font-size: 12px; color: #555; min-width: 40px; }
+
+  /* ── Collaboration / mobility table ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: white;
+  }
+  .data-table thead tr {
+    background: var(--wur-dark-blue);
+    color: white;
+  }
+  .data-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .data-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #eee;
+    color: var(--wur-dark-blue);
+  }
+  .data-table tbody tr:nth-child(even) { background: #f9f8f6; }
+  .data-table tbody tr:hover { background: #edf4fb; }
+  .data-table tfoot tr { background: #e8f0e8; font-weight: bold; }
+
+  /* ── Tags ── */
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #e8f0e8;
+    color: var(--wur-dark-blue);
+    border: 1px solid #b8d8b8;
+  }
+  .tag.critical { background: #fff0cc; border-color: #e0c040; }
+  .tag.high { background: #ddeeff; border-color: #9ac0ef; }
+
+  /* ── Footer ── */
+  .footer {
+    background: var(--wur-dark-blue);
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    padding: 16px 40px;
+    margin-top: 40px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 768px) {
+    .chart-grid, .chart-grid.three { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 16px; }
+    .tab-bar { overflow-x: auto; }
+    .bar-item-label { width: 120px; font-size: 10px; }
+    .content { padding: 20px; }
+  }
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>Welcome to WUR Survey</h1>
-        <img src="WUR_RGB.png" alt="WUR Logo">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>CAREC Universities — CSA Internship Survey</h1>
+    <p>8 universities · 7 countries · 47 survey variables · Data collected 2025</p>
+  </div>
+  <div class="wur-logo-box">
+    <div class="wur-logo-text" style="color:white;">WUR</div>
+    <div class="wur-logo-sub" style="color:rgba(255,255,255,0.7);">Wageningen University &amp; Research</div>
+  </div>
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview', this)">Overview</button>
+  <button class="tab-btn" onclick="showTab('profiles', this)">University profiles</button>
+  <button class="tab-btn" onclick="showTab('csa', this)">CSA content</button>
+  <button class="tab-btn" onclick="showTab('structure', this)">Programme structure</button>
+  <button class="tab-btn" onclick="showTab('collab', this)">Collaboration</button>
+  <button class="tab-btn" onclick="showTab('mobility', this)">Mobility capacity</button>
+  <button class="tab-btn" onclick="showTab('challenges', this)">Challenges &amp; needs</button>
+</div>
+
+<!-- ═══════════════════ OVERVIEW ═══════════════════ -->
+<div id="overview" class="content panel active">
+
+  <div class="metrics-row">
+    <div class="metric-card">
+      <div class="metric-label">Universities surveyed</div>
+      <div class="metric-value">8</div>
+      <div class="metric-sub">Across 7 countries</div>
     </div>
-    <div class="content">
-        <p>Please fill out the survey.</p>
+    <div class="metric-card blue">
+      <div class="metric-label">Active CSA internships</div>
+      <div class="metric-value">5</div>
+      <div class="metric-sub">3 planned / in future</div>
     </div>
-    <div class="footer">
-        <img src="WUR_WIT.png" alt="WUR Footer Logo">
+    <div class="metric-card">
+      <div class="metric-label">Award academic credits</div>
+      <div class="metric-value">7 / 8</div>
+      <div class="metric-sub">Formally embedded</div>
     </div>
+    <div class="metric-card orange">
+      <div class="metric-label">Avg. effectiveness</div>
+      <div class="metric-value">4.6 / 5</div>
+      <div class="metric-sub">Practical skills rating</div>
+    </div>
+    <div class="metric-card lightblue">
+      <div class="metric-label">Student capacity (total)</div>
+      <div class="metric-value">200</div>
+      <div class="metric-sub">Ready to receive</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">MoUs with hosts</div>
+      <div class="metric-value">8 / 8</div>
+      <div class="metric-sub">Universal host MoUs</div>
+    </div>
+  </div>
+
+  <div class="section-title">Programme status by university</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>CSA internship status</h3>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Internship mandatory vs optional</h3>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="mandatoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Effectiveness self-ratings (scale 1–5)</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Practical skills effectiveness</h3>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="effectChart1"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Career preparation effectiveness</h3>
+      <div class="chart-wrap" style="height:200px;">
+        <canvas id="effectChart2"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PROFILES ═══════════════════ -->
+<div id="profiles" class="content panel">
+  <div class="section-title">University profile cards</div>
+  <div class="uni-grid">
+
+    <div class="uni-card">
+      <div class="uni-card-header">Turkmen Agricultural University<div class="uni-card-country">Turkmenistan · Hydromelioration &amp; Agroecology</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-yes">Active</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Certificate / Short</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">4–8 weeks</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-no">No</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-partial">Both</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Weekly</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">TIIAME National Research University<div class="uni-card-country">Uzbekistan · Irrigation &amp; Melioration</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-planned">Planned</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Master's, PhD, Staff</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">&lt;4 weeks</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-optional">Optional</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Weekly</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">Kyrgyz National Agrarian University (KNAU)<div class="uni-card-country">Kyrgyzstan · International Relations</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-yes">Active</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Bachelor, Master's, Certificate</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">3–6 months</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-optional">Optional</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Weekly</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">KazNARU<div class="uni-card-country">Kazakhstan · Forestry &amp; Land Resources</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-yes">Active</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Bachelor, Certificate</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">&lt;4 to 8 weeks</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-optional">Optional</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Start &amp; end only</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">Georgian Technical University<div class="uni-card-country">Georgia · Agricultural Sciences</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-yes">Active</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Bachelor, Master's, PhD</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">3–6 months</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-mandatory">Mandatory</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Monthly</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">University of Agriculture, Faisalabad (UAF)<div class="uni-card-country">Pakistan · Agriculture &amp; Animal Sciences</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-yes">Active</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Bachelor</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">2–3 months</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-mandatory">Mandatory</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">No regular interaction</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">Tajik Agrarian University<div class="uni-card-country">Tajikistan · Agronomy &amp; Hydro-reclamation</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-planned">Planned</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Master's, Certificate</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">4–8 weeks</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-partial">Both</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Weekly</span></div>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-card-header">Azerbaijan Technical University (AzTU)<div class="uni-card-country">Azerbaijan · Energy Faculty</div></div>
+      <div class="uni-card-body">
+        <div class="uni-row"><span class="uni-key">CSA internship</span><span class="badge badge-planned">Planned</span></div>
+        <div class="uni-row"><span class="uni-key">Level</span><span class="uni-val">Bachelor, Master's</span></div>
+        <div class="uni-row"><span class="uni-key">Duration</span><span class="uni-val">2–3 months</span></div>
+        <div class="uni-row"><span class="uni-key">Credits awarded</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Mandatory</span><span class="badge badge-mandatory">Mandatory</span></div>
+        <div class="uni-row"><span class="uni-key">Host MoU</span><span class="badge badge-yes">Yes</span></div>
+        <div class="uni-row"><span class="uni-key">Site visit frequency</span><span class="uni-val">Monthly</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════ CSA CONTENT ═══════════════════ -->
+<div id="csa" class="content panel">
+
+  <div class="section-title">CSA topic coverage across universities</div>
+  <div class="chart-grid single">
+    <div class="chart-card">
+      <h3>Topics covered (number of universities, n=8)</h3>
+      <ul class="bar-list">
+        <li class="bar-item"><span class="bar-item-label">Water management / irrigation</span><div class="bar-track"><div class="bar-fill" style="width:87.5%;background:#005172;">7 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Climate adaptation practices</span><div class="bar-track"><div class="bar-fill" style="width:87.5%;background:#005172;">7 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Climate risk assessment</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#008A00;">6 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Sustainable soil management</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#008A00;">5 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Precision / digital agriculture</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#008A00;">5 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Agricultural policy &amp; governance</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6AADE4;">4 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Agroforestry</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6AADE4;">4 universities</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Crop diversification</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6AADE4;">4 universities</div></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Placement hosts and pre-internship training</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Placement host types</h3>
+      <div class="chart-wrap" style="height:260px;">
+        <canvas id="hostChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Pre-internship CSA training</h3>
+      <div class="chart-wrap" style="height:260px;">
+        <canvas id="trainingChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Skills students typically gain</div>
+  <div class="tag-cloud">
+    <span class="tag">Agricultural technology use</span>
+    <span class="tag">Field research &amp; data collection</span>
+    <span class="tag">Climate-smart farming techniques</span>
+    <span class="tag">Communication &amp; teamwork</span>
+    <span class="tag">Project management</span>
+    <span class="tag">Community engagement with farmers</span>
+    <span class="tag">Policy analysis</span>
+  </div>
+</div>
+
+<!-- ═══════════════════ STRUCTURE ═══════════════════ -->
+<div id="structure" class="content panel">
+  <div class="section-title">Supervision, evaluation and quality assurance</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Supervision and evaluation practices (n=8)</h3>
+      <ul class="bar-list">
+        <li class="bar-item"><span class="bar-item-label">Faculty supervisor</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#005172;">8 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Host organisation supervisor</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#005172;">8 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Formal host evaluation</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#005172;">8 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Regular programme evaluation</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#008A00;">6 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Outcomes feed curriculum</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#6AADE4;">5 / 8</div></div></li>
+      </ul>
+    </div>
+    <div class="chart-card">
+      <h3>Faculty site visit frequency</h3>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="visitChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Evaluation methods used</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Post-internship deliverables required</h3>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="delivChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Evaluation methods used</h3>
+      <div class="chart-wrap" style="height:220px;">
+        <canvas id="evalChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ COLLABORATION ═══════════════════ -->
+<div id="collab" class="content panel">
+  <div class="metrics-row">
+    <div class="metric-card blue">
+      <div class="metric-label">Collaborate with other unis</div>
+      <div class="metric-value">6 / 8</div>
+      <div class="metric-sub">Regularly or occasionally</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Inter-university MoUs</div>
+      <div class="metric-value">6 / 8</div>
+      <div class="metric-sub">Several formal agreements</div>
+    </div>
+    <div class="metric-card lightblue">
+      <div class="metric-label">Host interns from other unis</div>
+      <div class="metric-value">5 / 8</div>
+      <div class="metric-sub">Yes or occasionally</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Allow outgoing placements</div>
+      <div class="metric-value">7 / 8</div>
+      <div class="metric-sub">Yes or sometimes</div>
+    </div>
+  </div>
+
+  <div class="section-title">Desired collaboration models and preferred partner types</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Most desired collaboration models</h3>
+      <ul class="bar-list">
+        <li class="bar-item"><span class="bar-item-label">Joint CSA programmes</span><div class="bar-track"><div class="bar-fill" style="width:87.5%;background:#005172;">7 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">International student mobility</span><div class="bar-track"><div class="bar-fill" style="width:87.5%;background:#005172;">7 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Multi-university field training</span><div class="bar-track"><div class="bar-fill" style="width:87.5%;background:#005172;">7 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Regional CSA networks</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#008A00;">6 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Shared databases / platforms</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#6AADE4;">5 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Joint supervision of interns</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#6AADE4;">4 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Student exchange for internships</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#008A00;">6 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Collaborative research projects</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#6AADE4;">5 / 8</div></div></li>
+      </ul>
+    </div>
+    <div class="chart-card">
+      <h3>Preferred partner university types</h3>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="partnerChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MOBILITY ═══════════════════ -->
+<div id="mobility" class="content panel">
+  <div class="section-title">Exchange and internship capacity by university</div>
+  <div class="chart-card" style="margin-bottom:24px;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>University</th>
+          <th>Country</th>
+          <th>Students in</th>
+          <th>Teachers in</th>
+          <th>Teachers out</th>
+          <th>Student duration</th>
+          <th>Teacher duration</th>
+          <th>Uni finances</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Turkmen AU</td><td>Turkmenistan</td><td>17</td><td>10</td><td>8</td><td>Jun–Aug (6–8 wk)</td><td>Up to 2 weeks</td><td><span class="badge badge-partial">Sometimes</span></td></tr>
+        <tr><td>TIIAME</td><td>Uzbekistan</td><td>10</td><td>10</td><td>10</td><td>2 weeks</td><td>2 weeks</td><td><span class="badge badge-no">No</span></td></tr>
+        <tr><td>KNAU</td><td>Kyrgyzstan</td><td>100</td><td>30</td><td>20</td><td>3–12 months</td><td>1 week–6 months</td><td><span class="badge badge-partial">Partial</span></td></tr>
+        <tr><td>KazNARU</td><td>Kazakhstan</td><td>15</td><td>16</td><td>15</td><td>2–6 weeks</td><td>2–6 weeks</td><td><span class="badge badge-no">No</span></td></tr>
+        <tr><td>Georgian TU</td><td>Georgia</td><td>10</td><td>10</td><td>8</td><td>1 month</td><td>5 days</td><td><span class="badge badge-no">No</span></td></tr>
+        <tr><td>UAF</td><td>Pakistan</td><td>30</td><td>10</td><td>5</td><td>Spring semester</td><td>Variable</td><td><span class="badge badge-no">No</span></td></tr>
+        <tr><td>Tajik AU</td><td>Tajikistan</td><td>8</td><td>4</td><td>5</td><td>2–4 weeks</td><td>Up to 2 weeks</td><td><span class="badge badge-no">No</span></td></tr>
+        <tr><td>AzTU</td><td>Azerbaijan</td><td>10</td><td>3</td><td>3</td><td>6 months (from Feb 2027)</td><td>6 months</td><td><span class="badge badge-no">No</span></td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td><strong>Total</strong></td><td></td><td><strong>200</strong></td><td><strong>93</strong></td><td><strong>74</strong></td><td colspan="3"></td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="section-title">Capacity visualisation</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Students ready to receive (by university)</h3>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="studentsChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Teacher exchange capacity (in vs out)</h3>
+      <div class="chart-wrap" style="height:280px;">
+        <canvas id="teachersChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CHALLENGES ═══════════════════ -->
+<div id="challenges" class="content panel">
+  <div class="section-title">Internal CSA internship challenges</div>
+  <div class="chart-grid single">
+    <div class="chart-card">
+      <h3>Challenges in implementing CSA internships (number of universities reporting)</h3>
+      <ul class="bar-list">
+        <li class="bar-item"><span class="bar-item-label">Limited funding</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#8B0000;">8 / 8 — universal</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Logistical (transport / accom.)</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#FF7900;">4 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Lack of internship placements</span><div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#FF7900;">3 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Lack of CSA expertise</span><div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#FF7900;">3 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Limited industry partnerships</span><div class="bar-track"><div class="bar-fill" style="width:12.5%;background:#D0B972;">1 / 8</div></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Inter-university collaboration challenges</div>
+  <div class="chart-grid single">
+    <div class="chart-card">
+      <h3>Barriers to collaboration (number of universities reporting)</h3>
+      <ul class="bar-list">
+        <li class="bar-item"><span class="bar-item-label">Funding limitations</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#8B0000;">8 / 8 — universal</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Differences in academic calendars</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#FF7900;">5 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Credit recognition issues</span><div class="bar-track"><div class="bar-fill" style="width:62.5%;background:#FF7900;">5 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Visa / mobility restrictions</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#FF7900;">4 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Limited inter-university comms</span><div class="bar-track"><div class="bar-fill" style="width:37.5%;background:#D0B972;">3 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Administrative barriers</span><div class="bar-track"><div class="bar-fill" style="width:25%;background:#D0B972;">2 / 8</div></div></li>
+        <li class="bar-item"><span class="bar-item-label">Lack of formal partnerships</span><div class="bar-track"><div class="bar-fill" style="width:12.5%;background:#6AADE4;">1 / 8</div></div></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-title">Support needs most frequently requested</div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Support priorities</h3>
+      <div class="chart-wrap" style="height:260px;">
+        <canvas id="supportChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card" style="display:flex;flex-direction:column;justify-content:center;">
+      <h3 style="margin-bottom:14px;">Key themes from open responses</h3>
+      <p style="font-size:12px;color:#444;margin-bottom:12px;">Universities most commonly called for:</p>
+      <div class="tag-cloud">
+        <span class="tag critical">Funding for student mobility (8/8)</span>
+        <span class="tag high">International collaboration frameworks (6/8)</span>
+        <span class="tag high">CSA training materials (5/8)</span>
+        <span class="tag">Farm &amp; org partnerships (5/8)</span>
+        <span class="tag">Faculty development programmes (5/8)</span>
+        <span class="tag">Standardised CAREC internship framework</span>
+        <span class="tag">Shared digital placement platform</span>
+        <span class="tag">Credit transfer mechanism</span>
+        <span class="tag">Diplomatic / visa facilitation</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <span>CAREC Universities CSA Internship Survey · Wageningen Social &amp; Economic Research (WSER) · WUR</span>
+  <span>Interactive dashboard · Data: 2025</span>
+</div>
+
+<script>
+// ── WUR colors ──
+const C = {
+  darkBlue: '#005172',
+  green: '#008A00',
+  lightBlue: '#6AADE4',
+  sand: '#D0B972',
+  lightGrey: '#D5D2CA',
+  orange: '#FF7900',
+  secBlue: '#00549F',
+};
+
+const unis = ['Turkmen AU','TIIAME','KNAU','KazNARU','Georgian TU','UAF','Tajik AU','AzTU'];
+
+// ── Tab switching ──
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Chart defaults ──
+Chart.defaults.font.family = 'Verdana, Geneva, sans-serif';
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#333';
+
+// ── Overview: status doughnut ──
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Active CSA programme', 'Planned for future'],
+    datasets: [{ data: [5, 3], backgroundColor: [C.green, C.sand], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } } }
+});
+
+// ── Overview: mandatory ──
+new Chart(document.getElementById('mandatoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Mandatory', 'Optional', 'Both / flexible'],
+    datasets: [{ data: [3, 3, 2], backgroundColor: [C.darkBlue, C.lightBlue, C.sand], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } } }
+});
+
+// ── Overview: effectiveness ──
+const effectOpts = (label) => ({
+  type: 'bar',
+  data: {
+    labels: unis,
+    datasets: [{
+      label,
+      data: [5,5,5,4,5,4,5,4],
+      backgroundColor: C.green,
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    scales: {
+      x: { min: 0, max: 5, ticks: { stepSize: 1 }, grid: { color: '#eee' } },
+      y: { grid: { display: false } }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+new Chart(document.getElementById('effectChart1'), effectOpts('Practical skills'));
+new Chart(document.getElementById('effectChart2'), {
+  type: 'bar',
+  data: { labels: unis, datasets: [{ label: 'Career prep', data: [5,5,5,4,5,4,5,4], backgroundColor: C.darkBlue, borderRadius: 2 }] },
+  options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    scales: { x: { min: 0, max: 5, ticks: { stepSize: 1 }, grid: { color: '#eee' } }, y: { grid: { display: false } } },
+    plugins: { legend: { display: false } } }
+});
+
+// ── CSA: host types ──
+new Chart(document.getElementById('hostChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Farms /\nenterprises','Research\ninstitutes','Agribusiness','Govt\nagencies','NGOs','Intl orgs'],
+    datasets: [{
+      label: 'Universities placing students here',
+      data: [7, 7, 5, 4, 4, 2],
+      backgroundColor: [C.darkBlue, C.darkBlue, C.green, C.lightBlue, C.lightBlue, C.sand],
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 8, ticks: { stepSize: 1 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── CSA: pre-training ──
+new Chart(document.getElementById('trainingChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Pre-internship CSA training provided', 'No pre-internship training'],
+    datasets: [{ data: [7, 1], backgroundColor: [C.green, C.lightGrey], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } } }
+});
+
+// ── Structure: site visits ──
+new Chart(document.getElementById('visitChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Weekly (4 unis)', 'Monthly (2 unis)', 'Start & end only (1 uni)', 'No regular visit (1 uni)'],
+    datasets: [{ data: [4, 2, 1, 1], backgroundColor: [C.green, C.lightBlue, C.sand, C.lightGrey], borderWidth: 2, borderColor: '#fff' }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } } } }
+});
+
+// ── Structure: deliverables ──
+new Chart(document.getElementById('delivChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Internship\nreport','Field\nproject','Presentation','Research\npaper'],
+    datasets: [{
+      data: [8, 4, 6, 3],
+      backgroundColor: [C.darkBlue, C.green, C.lightBlue, C.sand],
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 8, ticks: { stepSize: 1 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── Structure: eval methods ──
+new Chart(document.getElementById('evalChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Faculty\nevaluation','Internship\nreports','Employer\nfeedback','Student\nsurveys','Site\nvisits'],
+    datasets: [{
+      data: [7, 7, 5, 4, 4],
+      backgroundColor: [C.darkBlue, C.darkBlue, C.green, C.lightBlue, C.lightBlue],
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 8, ticks: { stepSize: 1 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── Collaboration: partner types ──
+new Chart(document.getElementById('partnerChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Agricultural\nunis','Intl unis\n(outside region)','Research\ninstitutes','Regional unis\n(same region)','Same-country\nunis'],
+    datasets: [{
+      data: [7, 6, 5, 5, 4],
+      backgroundColor: [C.darkBlue, C.green, C.lightBlue, C.lightBlue, C.sand],
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 8, ticks: { stepSize: 1 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── Mobility: students ──
+new Chart(document.getElementById('studentsChart'), {
+  type: 'bar',
+  data: {
+    labels: unis,
+    datasets: [{
+      label: 'Students ready to receive',
+      data: [17, 10, 100, 15, 10, 30, 8, 10],
+      backgroundColor: C.green,
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    scales: { x: { beginAtZero: true, grid: { color: '#eee' } }, y: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+
+// ── Mobility: teachers ──
+new Chart(document.getElementById('teachersChart'), {
+  type: 'bar',
+  data: {
+    labels: unis,
+    datasets: [
+      { label: 'Ready to receive', data: [10, 10, 30, 16, 10, 10, 4, 3], backgroundColor: C.darkBlue, borderRadius: 2 },
+      { label: 'Ready to send', data: [8, 10, 20, 15, 8, 5, 5, 3], backgroundColor: C.lightBlue, borderRadius: 2 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    scales: { x: { beginAtZero: true, grid: { color: '#eee' }, stacked: false }, y: { grid: { display: false } } },
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } } }
+  }
+});
+
+// ── Challenges: support needs ──
+new Chart(document.getElementById('supportChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Funding for\nplacements','International\ncollaboration','CSA training\nmaterials','Farm / org\npartnerships','Faculty\ndevelopment'],
+    datasets: [{
+      data: [8, 6, 5, 5, 5],
+      backgroundColor: [C.orange, C.darkBlue, C.green, C.lightBlue, C.sand],
+      borderRadius: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true, max: 8, ticks: { stepSize: 1 }, grid: { color: '#eee' } }, x: { grid: { display: false } } },
+    plugins: { legend: { display: false } }
+  }
+});
+</script>
 </body>
 </html>
