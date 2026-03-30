@@ -49,20 +49,11 @@
   }
   .wur-logo-box {
     display: flex;
-    flex-direction: column;
     align-items: flex-end;
-    gap: 4px;
   }
-  .wur-logo-text {
-    font-size: 20px;
-    font-weight: bold;
-    letter-spacing: 0.08em;
-  }
-  .wur-logo-sub {
-    font-size: 8px;
-    opacity: 0.8;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+  .wur-logo-img {
+    height: 44px;
+    width: auto;
   }
 
   /* ── Tabs ── */
@@ -296,9 +287,21 @@
     color: rgba(255,255,255,0.6);
     font-size: 11px;
     padding: 16px 40px;
-    margin-top: 40px;
     display: flex;
+    align-items: center;
     justify-content: space-between;
+  }
+  .footer-logo-strip {
+    background: white;
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    border-top: 3px solid var(--wur-green);
+  }
+  .footer-logo-strip img {
+    height: 38px;
+    width: auto;
   }
 
   @media (max-width: 768px) {
@@ -319,8 +322,7 @@
     <p>8 universities · 7 countries · 47 survey variables · Data collected 2025</p>
   </div>
   <div class="wur-logo-box">
-    <div class="wur-logo-text" style="color:white;">WUR</div>
-    <div class="wur-logo-sub" style="color:rgba(255,255,255,0.7);">Wageningen University &amp; Research</div>
+    <img src="WUR_WIT.png" alt="Wageningen University & Research" class="wur-logo-img">
   </div>
 </div>
 
@@ -761,9 +763,12 @@
 </div>
 
 <!-- Footer -->
+<div class="footer-logo-strip">
+  <img src="WUR_RGB.png" alt="Wageningen University &amp; Research">
+</div>
 <div class="footer">
-  <span>CAREC Universities CSA Internship Survey · Wageningen Social &amp; Economic Research (WSER) · WUR</span>
-  <span>Interactive dashboard · Data: 2025</span>
+  <span>CAREC Universities CSA Internship Survey &nbsp;·&nbsp; Wageningen Social &amp; Economic Research (WSER) &nbsp;·&nbsp; Wageningen University &amp; Research</span>
+  <span>Interactive dashboard &nbsp;·&nbsp; Data: 2025</span>
 </div>
 
 <script>
